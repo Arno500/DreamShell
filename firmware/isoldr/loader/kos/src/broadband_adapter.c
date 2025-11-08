@@ -110,7 +110,7 @@ struct {
 #define NIC(ADDR) (0xa1001700 + (ADDR))
 
 /* 8 and 32 bit access to the PCI MEMMAP space (configured by GAPS) */
-static uint32 const rtl_mem = 0xa1840000;
+// static uint32 const rtl_mem = 0xa1840000;
 
 /* TX buffer pointers */
 static uint32 const txdesc[4] = {	0xa1846000,

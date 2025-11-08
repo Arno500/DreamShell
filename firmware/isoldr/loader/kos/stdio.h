@@ -11,6 +11,15 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#if DCLOAD_DEBUG
+#define DBG(...) printf __VA_ARGS__
+#else
+#define DBG(...) \
+  do             \
+  {              \
+  } while (0)
+#endif
+
 /* Flags which can be passed to number () */
 #define N_ZEROPAD   1       /* pad with zero */
 #define N_SIGN      2       /* unsigned/signed long */
@@ -20,7 +29,7 @@
 #define N_SPECIAL   32      /* 0x */
 #define N_LARGE     64      /* use 'ABCDEF' instead of 'abcdef' */
 
-char *printf_number(char *str, long num, int32 base, int32 size, int32 precision, int32 type);
+char *printf_number(char *str, long num, long base, long size, long precision, long type);
 int vsnprintf(char *buf, int size, const char *fmt, va_list args);
 int snprintf(char *buf, int size, const char *fmt, ...);
 int vsprintf(char *, const char *, va_list);

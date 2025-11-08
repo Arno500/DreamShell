@@ -9,11 +9,10 @@ include Makefile.cfg
 TARGETCFLAGS += $(DCL_CFLAGS)
 LOBJECTS += $(DCL)
 
-all: rm-elf $(BUILD)/dcl.bin
+NAME ?= dcl
 
-rm-elf:
-	rm -f $(LOBJECTS) $(BUILD)/dcl.bin $(BUILD)/dcl.elf
+all: $(BUILD)/$(NAME).bin
 
-$(BUILD)/dcl.elf: $(LOBJECTS)
-	$(TARGETCC) $(TARGETCFLAGS) $(TARGETLDFLAGS) -o $@ $(LOBJECTS) $(LIBS)
+$(BUILD)/$(NAME).elf: $(OBJECTS)
+	$(TARGETCC) $(TARGETCFLAGS) $(TARGETLDFLAGS) -o $@ $(OBJECTS) $(LIBS)
 	$(TARGETSIZE) $@

@@ -13,8 +13,10 @@
 
 extern int sl_mode;
 
+int new_protocol = 1;
 
 CMD_HANDLER(EXEC) {
+	(void)ip;
 	pkt_tas_t * req = (pkt_tas_t *)udp->data;
 	pkt_tas_t * rsp;
 	//uint32 addr = ntohl(req->addr);
@@ -37,21 +39,27 @@ struct {
 	uint8	map[2048];	// Bit mask of received blocks
 } lbin_info;
 
+static uint8 get_packet_data_size()
+{
+	return new_protocol ? 1440 : 1024;
+}
+
 // Clear / init everything to defaults
-static void lbin_init(uint8 * ptr, uint32 size) {
+static void lbin_init(uint8 *ptr, uint32 size)
+{
 	// Set our pointers
 	lbin_info.dst = ptr;
 	lbin_info.size = size;
 
 	// Clear out the relevant part of the map
 	size = (size + 8191) & ~8191;
-	memset(lbin_info.map, 0, size / (8*1024));
+	memset(lbin_info.map, 0, size / (8 * get_packet_data_size()));
 }
 
 // Mark the block at ptr as received
 static void lbin_compl(uint8 * ptr) {
 	// Where in the map is the current block?
-	uint32 blid = ((uint32)(ptr - lbin_info.dst)) / 1024;
+	uint32 blid = ((uint32)(ptr - lbin_info.dst)) / get_packet_data_size();
 
 	// Set it received
 	lbin_info.map[blid / 8] |= 1 << (blid % 8);
@@ -60,7 +68,7 @@ static void lbin_compl(uint8 * ptr) {
 // Returns non-zero if the block at ptr is marked as received
 static int lbin_is_compl(uint8 * ptr) {
 	// Where in the map is the current block?
-	uint32 blid = ((uint32)(ptr - lbin_info.dst)) / 1024;
+	uint32 blid = ((uint32)(ptr - lbin_info.dst)) / get_packet_data_size();
 
 	return lbin_info.map[blid / 8] & (1 << (blid % 8));
 }
@@ -72,15 +80,17 @@ static int lbin_find_hole(uint8 ** ptr, uint32 * size) {
 	uint8 * dst;
 	uint8 * dstend = lbin_info.dst + lbin_info.size;
 	uint32 left;
+	uint8 packet_size = get_packet_data_size();
 
-	for (dst = lbin_info.dst; dst < dstend; dst += 1024) {
+	for (dst = lbin_info.dst; dst < dstend; dst += packet_size)
+	{
 		if (!lbin_is_compl(dst)) {
 			// Found a hole.. figure out how big it is.
 			left = dstend - dst;
 
 			// Send back the bad news.
 			*ptr = dst;
-			*size = left > 1024 ? 1024 : left;
+			*size = left > packet_size ? packet_size : left;
 			return 1;
 		}
 	}
@@ -90,6 +100,7 @@ static int lbin_find_hole(uint8 ** ptr, uint32 * size) {
 }
 
 CMD_HANDLER(LBIN) {
+	(void)ip;
 	pkt_tas_t * req = (pkt_tas_t *)udp->data;
 	pkt_tas_t * rsp;
 
@@ -109,6 +120,7 @@ CMD_HANDLER(LBIN) {
 }
 
 CMD_HANDLER(PBIN) {
+	(void)ip;
 	pkt_tas_t * req = (pkt_tas_t *)udp->data;
 
 	// Get all our pointers setup.
@@ -125,6 +137,7 @@ CMD_HANDLER(PBIN) {
 }
 
 CMD_HANDLER(DBIN) {
+	(void)ip;
 	pkt_tas_t * req = (pkt_tas_t *)udp->data;
 	pkt_tas_t * rsp;
 
@@ -154,12 +167,14 @@ CMD_HANDLER(DBIN) {
 }
 
 CMD_HANDLER(SBIN) {
+	(void)ip;
 	pkt_tas_t * req = (pkt_tas_t *)udp->data;
 	pkt_tas_t * rsp;
 
 	// Get all our pointers setup.
 	uint8	* src = (uint8 *)(ntohl(req->addr));
 	uint32	cnt = ntohl(req->size), now;
+	uint8 packet_size = get_packet_data_size();
 
 	//printf("SBIN: src %p, cnt %d\n", src, cnt);
 	if ((ptr_t)src < 0x8c010000 || (ptr_t)src > 0x8d000000 || cnt > 16*1024*1024) {
@@ -174,7 +189,7 @@ CMD_HANDLER(SBIN) {
 	// Send everything one packet at a time...
 	while (cnt > 0) {
 		// Update counters
-		now = cnt > 1024 ? 1024 : cnt;
+		now = cnt > packet_size ? packet_size : cnt;
 
 		rsp->addr = htonl((uint32)src);
 		rsp->size = htonl(now);
@@ -193,9 +208,13 @@ CMD_HANDLER(SBIN) {
 }
 
 CMD_HANDLER(SREG) {
+	(void)ip;
+	(void)udp;
 }
 
 CMD_HANDLER(VERS) {
+	(void)ip;
+	(void)udp;
 	//pkt_tas_t * req = (pkt_tas_t *)udp->data;
 	pkt_tas_t * rsp;
 
@@ -204,11 +223,12 @@ CMD_HANDLER(VERS) {
 	memcpy(rsp->tag, CMD_VERS, 4);
 	rsp->addr = 0;
 	rsp->size = 0;
-	strcpy(rsp->data, VERSION);
+	memcpy(rsp->data, VERSION, strlen(VERSION) + 1);
 	net_resp_complete(sizeof(pkt_tas_t) + strlen(VERSION) + 1);
 }
 
 CMD_HANDLER(RETV) {
+	(void)ip;
 	pkt_tas_t * req = (pkt_tas_t *)udp->data;
 	pkt_tas_t * rsp;
 
@@ -226,7 +246,8 @@ CMD_HANDLER(RETV) {
 }
 
 CMD_HANDLER(RBOT) {
-
+	(void)ip;
+	(void)udp;
 	//int needquit = 0;
 
 	//printf("exit requested\n");
@@ -240,14 +261,22 @@ CMD_HANDLER(RBOT) {
 }
 
 CMD_HANDLER(PAUS) {
+	(void)ip;
+	(void)udp;
 }
 
 CMD_HANDLER(RSUM) {
+	(void)ip;
+	(void)udp;
 }
 
 CMD_HANDLER(TERM) {
+	(void)ip;
+	(void)udp;
 }
 
 CMD_HANDLER(CDTO) {
+	(void)ip;
+	(void)udp;
 }
 

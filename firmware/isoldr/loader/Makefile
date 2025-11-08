@@ -14,10 +14,10 @@ DEFS_FULL = $(DEFS_FEAT) ENABLE_ESC=1 ENABLE_SCR=1 ENABLE_BLEEM=1
 TARGETS_CD = cd_full cd_feat cd_vmu cd_cdda cd
 TARGETS_SD = sd_full sd_feat sd_vmu sd_cdda sd
 TARGETS_IDE = ide_full ide_feat ide_vmu ide_cdda ide
-# TARGETS_DCL = dcl_full dcl_feat dcl_vmu dcl_cdda dcl
-# TARGETS_NET = net_full net_feat net_vmu net_cdda net
+TARGETS_DCL = dcl_full dcl_feat dcl_vmu dcl_cdda dcl
+TARGETS_NET = net_full net_feat net_vmu net_cdda net
 
-all: $(TARGETS_CD) $(TARGETS_SD) $(TARGETS_IDE)
+all: $(TARGETS_CD) $(TARGETS_SD) $(TARGETS_IDE) $(TARGETS_DCL) $(TARGETS_NET)
 
 sd: $(BUILD)/sd.bin
 $(BUILD)/sd.bin:
@@ -79,13 +79,45 @@ cd_full: $(BUILD)/cd_full.bin
 $(BUILD)/cd_full.bin:
 	make -f Makefile.cd $(DEFS_FULL) NAME=cd_full
 
-# dcl: $(BUILD)/dcl.bin
-# $(BUILD)/dcl.bin:
-# 	make -f Makefile.dcl $(DEFS)
+dcl: $(BUILD)/dcl.bin
+$(BUILD)/dcl.bin:
+	make -f Makefile.dcl $(DEFS)
 
-# net: $(BUILD)/net.bin
-# $(BUILD)/net.bin:
-# 	make -f Makefile.net $(DEFS)
+dcl_cdda: $(BUILD)/dcl_cdda.bin
+$(BUILD)/dcl_cdda.bin:
+	make -f Makefile.dcl $(DEFS_CDDA) NAME=dcl_cdda
+
+dcl_vmu: $(BUILD)/dcl_vmu.bin
+$(BUILD)/dcl_vmu.bin:
+	make -f Makefile.dcl $(DEFS_VMU) NAME=dcl_vmu
+
+dcl_feat: $(BUILD)/dcl_feat.bin
+$(BUILD)/dcl_feat.bin:
+	make -f Makefile.dcl $(DEFS_FEAT) NAME=dcl_feat
+
+dcl_full: $(BUILD)/dcl_full.bin
+$(BUILD)/dcl_full.bin:
+	make -f Makefile.dcl $(DEFS_FULL) NAME=dcl_full
+
+net: $(BUILD)/net.bin
+$(BUILD)/net.bin:
+	make -f Makefile.net $(DEFS)
+
+net_cdda: $(BUILD)/net_cdda.bin
+$(BUILD)/net_cdda.bin:
+	make -f Makefile.net $(DEFS_CDDA) NAME=net_cdda
+
+net_vmu: $(BUILD)/net_vmu.bin
+$(BUILD)/net_vmu.bin:
+	make -f Makefile.net $(DEFS_VMU) NAME=net_vmu
+
+net_feat: $(BUILD)/net_feat.bin
+$(BUILD)/net_feat.bin:
+	make -f Makefile.net $(DEFS_FEAT) NAME=net_feat
+
+net_full: $(BUILD)/net_full.bin
+$(BUILD)/net_full.bin:
+	make -f Makefile.net $(DEFS_FULL) NAME=net_full
 
 clean: 
 	rm -f $(KOS) $(EXEC) $(MAIN) $(SD) $(IDE) $(CD) #$(DCL) $(NET)
