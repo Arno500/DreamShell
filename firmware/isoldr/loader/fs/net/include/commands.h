@@ -13,6 +13,11 @@ __BEGIN_DECLS
 
 #include <net/net.h>
 
+#define SLMODE_NONE 0 // not initialized yet
+#define SLMODE_EXCL 1 // exclusive
+#define SLMODE_IMME 2 // immediate
+#define SLMODE_COOP 3 // cooperative
+
 // Command packet types
 #define CMD_EXEC "EXEC"
 #define CMD_LBIN "LBIN"

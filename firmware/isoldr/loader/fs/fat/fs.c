@@ -116,8 +116,9 @@ int fs_init() {
 void fs_enable_dma(int state) {
 
 #ifdef DBG
-	if(dma_mode != state)
+	if(dma_mode != state) {
 		LOGFF("%d\n", state);
+	}
 #endif
 	dma_mode = state;
 }

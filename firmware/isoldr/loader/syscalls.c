@@ -564,6 +564,7 @@ void data_transfer() {
 	data_transfer_emu_async();
 }
 
+#ifdef _FS_ASYNC
 static void data_transfer_dma_stream() {
 
 	gd_state_t *GDS = get_GDS();
@@ -594,7 +595,6 @@ static void data_transfer_dma_stream() {
 			GDS->transfered = pre_read_xfer_size();
 		}
 		else if(pre_read_xfer_done() || alt_read) {
-
 			if(alt_read) {
 				do {} while(poll(iso_fd) > 1);
 			}
@@ -673,9 +673,10 @@ static void data_transfer_pio_stream() {
 			break;
 		}
 	}
-
+	
 	GDS->drv_stat = CD_STATUS_PAUSED;
 }
+#endif /* _FS_ASYNC */
 
 static int init_cmd() {
 #ifdef HAVE_EXPT
@@ -892,6 +893,7 @@ void gdcMainLoop(void) {
 					case CMD_DMAREAD:
 						data_transfer();
 						break;
+#ifdef _FS_ASYNC
 					case CMD_DMAREAD_STREAM:
 					case CMD_DMAREAD_STREAM_EX:
 						data_transfer_dma_stream();
@@ -900,6 +902,7 @@ void gdcMainLoop(void) {
 					case CMD_PIOREAD_STREAM_EX:
 						data_transfer_pio_stream();
 						break;
+#endif
 					//case CMD_GETTOC:
 					case CMD_GETTOC2:
 						GetTOC();

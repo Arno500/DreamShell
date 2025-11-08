@@ -6,14 +6,18 @@
 
 include Makefile.cfg
 
-TARGETCFLAGS += $(DCL_CFLAGS)
+TARGETCFLAGS += $(NET_CFLAGS)
 LOBJECTS += $(NET)
 
-all: rm-elf $(BUILD)/net.bin
+# g2bus shall always be imported for the net loader
+ifeq (,$(findstring g2bus.o,$(LOBJECTS)))
+LOBJECTS += $(KOS_DIR)/src/g2bus.o
+endif
 
-rm-elf:
-	rm -f $(LOBJECTS) $(BUILD)/net.bin $(BUILD)/net.elf
+NAME ?= net
 
-$(BUILD)/net.elf: $(LOBJECTS)
-	$(TARGETCC) $(TARGETCFLAGS) $(TARGETLDFLAGS) -o $@ $(LOBJECTS) $(LIBS)
+all: $(BUILD)/$(NAME).bin
+
+$(BUILD)/$(NAME).elf: $(OBJECTS)
+	$(TARGETCC) $(TARGETCFLAGS) $(TARGETLDFLAGS) -o $@ $(OBJECTS) $(LIBS)
 	$(TARGETSIZE) $@

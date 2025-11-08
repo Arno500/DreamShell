@@ -7,6 +7,7 @@
 #include "main.h"
 #include <kos/net.h>
 #include <net/net.h>
+#include "include/commands.h"
 
 //#define O_RDONLY        0
 //#define O_WRONLY        1
@@ -33,6 +34,17 @@
 
 int sl_mode = SLMODE_NONE;
 static uint32 serial_hi = 0;
+static int dma_mode = 0;
+
+void fs_enable_dma(int state)
+{
+	dma_mode = state;
+}
+
+int fs_dma_enabled()
+{
+	return dma_mode;
+}
 
 // This code is common to read, write, lseek, and dirread.
 static int sc_rw_common(int fd, const uint8 * buffer, int amt, const char * code) {
@@ -62,7 +74,7 @@ static int sc_os_common(const char * fn, uint32 val1, uint32 val2, const char * 
 	memcpy(rsp->tag, tag, 4);
 	rsp->value0 = htonl(val1);
 	rsp->value1 = htonl(val2);
-	strcpy(rsp->data, fn);
+	memcpy(rsp->data, fn, strlen(fn) + 1);
 	net_resp_complete(sizeof(pkt_2is_t) + strlen(fn) + 1);
 
 	// Wait for completion
@@ -151,6 +163,37 @@ int stat(const char *fn, uint8 *buffer) {
 }
 
 #endif
+
+long int tell(int fd)
+{
+	return lseek(fd, 0, SEEK_CUR);
+}
+
+unsigned long total(int fd)
+{
+	nif->if_start(nif);
+	long cur = sc_rw_common(fd, (uint8 *)0, SEEK_CUR, SC_LSEEK);
+	long ret = sc_rw_common(fd, (uint8 *)0, SEEK_END, SC_LSEEK);
+	sc_rw_common(fd, (uint8 *)cur, SEEK_SET, SC_LSEEK);
+	nif->if_stop(nif);
+	return (unsigned long)ret;
+}
+
+int ioctl(int fd, int cmd, void *data)
+{
+	(void)fd;
+	switch (cmd)
+	{
+	case FS_IOCTL_GET_LBA:
+	{
+		unsigned long sec = 0;
+		memcpy(data, &sec, sizeof(sec));
+		return 0;
+	}
+	default:
+		return FS_ERR_PARAM;
+	}
+}
 
 /*
 

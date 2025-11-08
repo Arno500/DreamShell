@@ -416,6 +416,8 @@ static int read_data_sectors(uint8 *buff, uint sector, uint cnt, fs_callback_f *
 			return PROCESSING;
 		}
 		else
+#else
+		(void)cb;
 #endif
 		{
 			if(read(iso_fd, buff, tmps) < 0) {
